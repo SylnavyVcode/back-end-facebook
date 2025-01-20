@@ -1,0 +1,114 @@
+// Définition de la base de données SQLite
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL") // Assurez-vous que la variable d'environnement DATABASE_URL est définie
+}
+
+// Génération des clients Prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+// prisma/schema.prisma
+
+// Utilisateur
+model User {
+  id             String   @id @default(cuid()) // ID unique pour chaque utilisateur
+  email          String   @unique
+  firstname      String
+  lastname       String
+  telephone      String
+  genre          String
+  anniversaire   String
+  profilePic     String?
+  profilCoverPic String?
+}
+
+// Account
+model Account {
+  id           String @id @default(cuid())
+  password     String
+  user_id      String @unique
+  type_account String
+}
+
+
+// Publication
+model Post {
+  id             String  @id @default(cuid())
+  content        String?
+  image          String?
+  video          String?
+  account_id     String
+  page_id        String?
+  comment_id     String
+  commentUser_id String
+  group_id       String?
+  privacy        Privacy @default(PRIVATE)
+}
+
+
+
+// Commentaire
+model Comment {
+  id         String @id @default(cuid())
+  account_id String
+  content    String
+  post_id    String
+}
+
+// Commentaire utilisateurs
+model CommentUsers {
+  id         String @id @default(cuid())
+  account_id String
+  post_id    String
+}
+
+// Groupe
+model Group {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  privacy     Privacy @default(PRIVATE)
+}
+
+// Groupe Ajout
+model GroupAdd {
+  id         String @id @default(cuid())
+  account_id String
+  post_id    String
+  group_id   String
+}
+
+// Message
+model Message {
+  id           String   @id @default(cuid())
+  message      String
+  sender_id    String
+  recipient_id String
+  createdAt    DateTime @default(now())
+  user_id      String
+}
+
+// Notification
+model Notification {
+  id        String   @id @default(cuid())
+  type      String
+  message   String
+  user_id   String
+  createdAt DateTime @default(now())
+}
+
+// Like
+model Like {
+  id         String  @id @default(cuid())
+  user_id    String
+  post_id    String?
+  comment_id String?
+}
+
+enum Privacy {
+  PUBLIC
+  PRIVATE
+  FRIENDS
+}
