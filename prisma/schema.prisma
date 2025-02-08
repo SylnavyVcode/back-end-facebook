@@ -28,6 +28,8 @@ model User {
 model Account {
   id           String @id @default(cuid())
   password     String
+  isResetingPassword     Boolean?
+  resetPasswordToken      String? @unique
   user_id      String @unique
   type_account String
 }

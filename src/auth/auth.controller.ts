@@ -15,6 +15,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { PrismaService } from 'src/prisma.service';
 import { RequestWith } from './jwt.strategy';
 import { UserService } from 'src/user/user.service';
+import { error } from 'console';
 
 @Controller('auth')
 export class AuthController {
@@ -28,8 +29,7 @@ export class AuthController {
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async signUp(@Body() signUp: CreateUserDto) {
-    
-    console.log(">>>>>>>data", signUp);
+    console.log('>>>>>>>data', signUp);
     return this.authService.register(signUp);
   }
 
@@ -38,8 +38,37 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   async login(@Body() authBody: signInDto) {
     console.log('login data', authBody);
+    let response = await this.authService.login(authBody);
+    console.log('login response', response);
 
-    return this.authService.login(authBody);
+    // return this.authService.login(authBody);
+  }
+
+  // Route pour se connecter
+  @Post('reset')
+  @HttpCode(HttpStatus.CREATED)
+  async reset(@Body() authBody: { email: string }) {
+    console.log('login data', authBody);
+    let response =
+      await this.authService.resetPasswordRequest(authBody);
+    if (response!) {
+      return response;
+    }
+  }
+  //
+  // Route pour se connecter
+  @Post('reset-password')
+  @HttpCode(HttpStatus.CREATED)
+  async resetPassword(@Body() authBody: { email: string }) {
+    console.log('login data', authBody);
+    let response =
+      await this.authService.resetPasswordAccountDisconnet(authBody);
+    if (response!) {
+      return response;
+    } else {
+      //
+    }
+    // return
   }
 
   @UseGuards(JwtAuthGuard)

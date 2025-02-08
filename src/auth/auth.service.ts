@@ -11,12 +11,17 @@ import { signInDto } from './dto/signInDto';
 import { JwtService } from '@nestjs/jwt';
 import { UserPayload } from './jwt.strategy';
 import { resetPasswordDemandDto } from './dto/ressetPasswordDemandeDto';
+import { generateCodeOTP } from 'src/utils/generateCodeOTP';
+import { MailerService } from 'src/mailer/mailer.service';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly mailerService: MailerService,
+    private readonly emailService: EmailService,
   ) {}
   // Création d'un utilisateur
   async register(data: CreateUserDto) {
@@ -25,6 +30,7 @@ export class AuthService {
     const user_find = await this.prisma.user.findUnique({
       where: { email: data.email },
     });
+
     if (user_find) {
       throw new ConflictException('Un compte existe déjà à cet adresse.');
     }
@@ -54,6 +60,11 @@ export class AuthService {
           type_account: 'PUBLIC',
         },
       });
+       await this.mailerService.sendCreatedAccountEmail({
+        recipient: data.email,
+        firstname: data.firstname,
+      });
+
       return this.authentificateUser({ user_id: resp_account.id });
       // return resp_account;
     }
@@ -84,6 +95,60 @@ export class AuthService {
       return this.authentificateUser({ user_id: user_find.id });
     }
   }
+  // resetPasswordRequest
+  async resetPasswordRequest({email} : {email: string}) {
+    const user_find = await this.prisma.user.findUnique({
+      where: { email: email },
+    });
+    if (!user_find) {
+      // throw new Error("L'utilisateur n'existe pas .");
+      return {
+        code: 400,
+        status: 'Echec',
+        message: "L'utilisateur n'existe pas .",
+      };
+    }
+
+    const account = await this.prisma.account.findUnique({
+      where: { user_id: user_find.id },
+    });
+    if (account) {
+      if (account.isResetingPassword) {
+        return {
+          code: 400,
+          status: 'Echec',
+          message: 'Une demande de réinitialisation est déjà en cours.',
+        };
+        // throw new Error('Une demande de réinitialisation est déjà en cours.')
+      }
+      const code = generateCodeOTP();
+      await this.prisma.account.update({
+        where: { id: account.id },
+        data: {
+          isResetingPassword: true,
+          resetPasswordToken: code,
+        },
+      });
+
+      const { firstname } = user_find;
+      this.emailService.sendEmail(
+        email,
+        "Réinitialisation de mot de passe",
+        `${firstname} votre code de réinitialisation est : ${code}`
+      )
+      // this.mailerService.sendRequestPasswordEmail({
+      //   recipient: email,
+      //   firstname: firstname,
+      //   code: code,
+      // });
+
+      return {
+        code: 200,
+        status: 'success',
+        message: 'Veuillez consulter vos emails pour réinitialiser.',
+      };
+    }
+  }
 
   // hash password
   private async hashPassword({ password }: { password: string }) {
@@ -111,14 +176,28 @@ export class AuthService {
     };
   }
 
-  // reset password
-  async resetPassword(resetPasswordDto: resetPasswordDemandDto) {
+  // reset password DISCONNECT
+  async resetPasswordAccountDisconnet(
+    resetPasswordDto: resetPasswordDemandDto,
+  ) {
     const { email } = resetPasswordDto;
     const user_find = await this.prisma.user.findUnique({
       where: { email: email },
     });
+    console.log('esponse fond', user_find);
+
     if (!user_find)
       throw new NotAcceptableException('Aucun utilisateur trouvé');
-    
+    return generateCodeOTP();
+  }
+  // reset password OONNECT
+  async resetPasswordAccountConnect({ user_id }: { user_id: string }) {
+    const user = await this.prisma.account.findUnique({
+      where: { id: user_id },
+    });
+    console.log('esponse fond', user);
+
+    if (!user) throw new NotAcceptableException('Aucun utilisateur trouvé');
+    return generateCodeOTP();
   }
 }

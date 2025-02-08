@@ -8,10 +8,14 @@ import { MailModule } from './mail/mail.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
+import { MailerModule } from './mailer/mailer.module';
+import { EmailService } from './email/email.service';
+import { EmailController } from './email/email.controller';
+import { EmailModule } from './email/email.module';
 
 @Module({
-  imports: [UserModule, MailModule, AuthModule],
-  controllers: [UserController, AuthController],
-  providers: [UserService, PrismaService, AuthService],
+  imports: [UserModule, MailModule, AuthModule, MailerModule, EmailModule],
+  controllers: [UserController, AuthController, EmailController],
+  providers: [UserService, PrismaService, AuthService, EmailService],
 })
 export class AppModule {}
