@@ -29,12 +29,12 @@ npm install
 
 - **Mode Développement :**  
   ```bash
-  npm run start:dev
+  npm run dev
   ```
 
 - **Mode Production :**  
   ```bash
-  npm run start:prod
+  npm run dev:prod
   ```
 
 - **Tests Unitaires :**  
