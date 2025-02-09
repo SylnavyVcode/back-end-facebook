@@ -7,6 +7,7 @@ import {
   Body,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/user/dto/CreateUserDto';
@@ -59,10 +60,24 @@ export class AuthController {
   // Route pour se connecter
   @Post('reset-password')
   @HttpCode(HttpStatus.CREATED)
-  async resetPassword(@Body() authBody: { email: string }) {
+  async resetPassword(@Body() authBody: { now_password: string }) {
+    console.log('login data', authBody);
+    // let response =
+    //   await this.authService.resetPasswordAccountDisconnet(authBody);
+    // if (response!) {
+    //   return response;
+    // } else {
+    //   //
+    // }
+    // return
+  }
+  // Route pour se connecter
+  @Get('validate-reset-password')
+  @HttpCode(HttpStatus.CREATED)
+  async validateResetPassword(@Query('token') authBody: { token: string }) {
     console.log('login data', authBody);
     let response =
-      await this.authService.resetPasswordAccountDisconnet(authBody);
+      await this.authService.resetPasswordValidation(authBody);
     if (response!) {
       return response;
     } else {

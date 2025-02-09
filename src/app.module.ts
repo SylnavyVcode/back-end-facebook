@@ -12,10 +12,11 @@ import { MailerModule } from './mailer/mailer.module';
 import { EmailService } from './email/email.service';
 import { EmailController } from './email/email.controller';
 import { EmailModule } from './email/email.module';
+import { ChatGateway } from './chat.gaway';
 
 @Module({
   imports: [UserModule, MailModule, AuthModule, MailerModule, EmailModule],
   controllers: [UserController, AuthController, EmailController],
-  providers: [UserService, PrismaService, AuthService, EmailService],
+  providers: [UserService, PrismaService, AuthService, EmailService, ChatGateway],
 })
 export class AppModule {}

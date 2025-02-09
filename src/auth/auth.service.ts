@@ -60,10 +60,15 @@ export class AuthService {
           type_account: 'PUBLIC',
         },
       });
-       await this.mailerService.sendCreatedAccountEmail({
-        recipient: data.email,
-        firstname: data.firstname,
-      });
+      this.emailService.sendEmail(
+        data.email,
+        'Votre compte a été créé avec succès',
+        `${data.firstname} félicitation votre compte a été créé avec succès.`,
+      );
+      //  await this.mailerService.sendCreatedAccountEmail({
+      //   recipient: data.email,
+      //   firstname: data.firstname,
+      // });
 
       return this.authentificateUser({ user_id: resp_account.id });
       // return resp_account;
@@ -95,8 +100,9 @@ export class AuthService {
       return this.authentificateUser({ user_id: user_find.id });
     }
   }
+
   // resetPasswordRequest
-  async resetPasswordRequest({email} : {email: string}) {
+  async resetPasswordRequest({ email }: { email: string }) {
     const user_find = await this.prisma.user.findUnique({
       where: { email: email },
     });
@@ -113,7 +119,7 @@ export class AuthService {
       where: { user_id: user_find.id },
     });
     if (account) {
-      if (account.isResetingPassword) {
+      if (account.isResetingPassword === true) {
         return {
           code: 400,
           status: 'Echec',
@@ -133,9 +139,9 @@ export class AuthService {
       const { firstname } = user_find;
       this.emailService.sendEmail(
         email,
-        "Réinitialisation de mot de passe",
-        `${firstname} votre code de réinitialisation est : ${code}`
-      )
+        'Réinitialisation de mot de passe',
+        `${firstname} votre code de réinitialisation est : ${code}`,
+      );
       // this.mailerService.sendRequestPasswordEmail({
       //   recipient: email,
       //   firstname: firstname,
@@ -148,6 +154,37 @@ export class AuthService {
         message: 'Veuillez consulter vos emails pour réinitialiser.',
       };
     }
+  }
+
+  // resetPasswordRequest
+  async resetPasswordValidation({ token }: { token: string }) {
+    console.log('token ========', token);
+
+    const account = await this.prisma.account.findUnique({
+      where: { resetPasswordToken: token },
+    });
+    console.log('account', account);
+    if (!account) {
+      return {
+        code: 400,
+        status: 'Echec',
+        message: "Le token n'est pas valide!",
+      };
+    }
+    if (account!.isResetingPassword === false) {
+      return {
+        code: 400,
+        status: 'Echec',
+        message: "Il n'y a pas de demande de réinitiation encours!",
+      };
+      // throw new Error('Une demande de réinitialisation est déjà en cours.')
+    }
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Le torken est valide et peut donc etre utilisé.',
+    };
   }
 
   // hash password
