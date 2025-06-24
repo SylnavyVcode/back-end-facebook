@@ -38,20 +38,19 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.CREATED)
   async login(@Body() authBody: signInDto) {
-    console.log('login data', authBody);
+    console.log('login===>data>>>', authBody);
     let response = await this.authService.login(authBody);
     console.log('login response', response);
 
-    // return this.authService.login(authBody);
+    return response;
   }
 
   // Route pour se connecter
   @Post('reset')
   @HttpCode(HttpStatus.CREATED)
   async reset(@Body() authBody: { email: string }) {
-    console.log('login data', authBody);
-    let response =
-      await this.authService.resetPasswordRequest(authBody);
+    console.log('login data reset====>>>>', authBody);
+    let response = await this.authService.resetPasswordRequest(authBody);
     if (response!) {
       return response;
     }
@@ -61,7 +60,7 @@ export class AuthController {
   @Post('reset-password')
   @HttpCode(HttpStatus.CREATED)
   async resetPassword(@Body() authBody: { now_password: string }) {
-    console.log('login data', authBody);
+    console.log('reset-password data ======>>>', authBody);
     // let response =
     //   await this.authService.resetPasswordAccountDisconnet(authBody);
     // if (response!) {
@@ -69,15 +68,14 @@ export class AuthController {
     // } else {
     //   //
     // }
-    // return
+    return
   }
   // Route pour se connecter
   @Get('validate-reset-password')
   @HttpCode(HttpStatus.CREATED)
   async validateResetPassword(@Query('token') authBody: { token: string }) {
-    console.log('login data', authBody);
-    let response =
-      await this.authService.resetPasswordValidation(authBody);
+    console.log('validate-reset-password data ====>>>', authBody);
+    let response = await this.authService.resetPasswordValidation(authBody);
     if (response!) {
       return response;
     } else {
@@ -87,7 +85,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get()
+  @Get('user')
   async authenticateUser(@Request() req: RequestWith) {
     // console.log(req.user);
 
