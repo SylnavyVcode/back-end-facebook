@@ -47,6 +47,7 @@ export class AuthController {
 
   // Route pour se connecter
   @Post('reset')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async reset(@Body() authBody: { email: string }) {
     console.log('login data reset====>>>>', authBody);
@@ -58,6 +59,7 @@ export class AuthController {
   //
   // Route pour se connecter
   @Post('reset-password')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async resetPassword(@Body() authBody: { now_password: string }) {
     console.log('reset-password data ======>>>', authBody);
@@ -84,8 +86,8 @@ export class AuthController {
     // return
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('user')
+  @UseGuards(JwtAuthGuard)
   async authenticateUser(@Request() req: RequestWith) {
     // console.log(req.user);
 

@@ -17,6 +17,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate({ user_id }: UserPayload) {
+    // Ici, vous pouvez ajouter une logique pour vérifier si l'utilisateur existe dans la base de données
+    console.log('Validating user with ID:', user_id);
+
     return { user_id };
   }
 }
