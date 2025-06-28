@@ -22,6 +22,9 @@ model User {
   anniversaire   String
   profilePic     String?
   profilCoverPic String?
+   posts     Post[]
+  comments  Comment[]
+  likes     Like[]
 }
 
 // Account
@@ -41,12 +44,14 @@ model Post {
   content        String?
   image          String?
   video          String?
-  account_id     String
-  page_id        String?
-  comment_id     String
-  commentUser_id String
+  author_id     String
+    author    User      @relation(fields: [author_id], references: [id])
+  comments  Comment[]
+  likes     Like[]
   group_id       String?
   privacy        Privacy @default(PRIVATE)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 
@@ -57,6 +62,9 @@ model Comment {
   account_id String
   content    String
   post_id    String
+   post      Post     @relation(fields: [post_id], references: [id])
+  author_id  String
+  author    User     @relation(fields: [author_id], references: [id])
 }
 
 // Commentaire utilisateurs
@@ -67,7 +75,7 @@ model CommentUsers {
 }
 
 // Groupe
-model Group {
+model Groupe {
   id          String  @id @default(cuid())
   name        String
   description String?
@@ -99,6 +107,7 @@ model Notification {
   message   String
   user_id   String
   createdAt DateTime @default(now())
+  read      Boolean  @default(false)
 }
 
 // Like
@@ -107,6 +116,8 @@ model Like {
   user_id    String
   post_id    String?
   comment_id String?
+  user     User     @relation(fields: [user_id], references: [id])
+  post     Post?    @relation(fields: [post_id], references: [id])
 }
 
 enum Privacy {

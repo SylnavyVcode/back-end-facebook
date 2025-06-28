@@ -21,20 +21,21 @@ export class UserController {
 
   // Route pour récupérer un utilisateur par son ID
   @Get(':id')
-    @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getUser(@Param('id') id: string) {
     return this.userService.getUser(id);
   }
 
   // Route pour récupérer tous les utilisateurs
   @Get()
+  @UseGuards(JwtAuthGuard)
   async getAllUsers() {
     return this.userService.getAllUsers();
   }
 
   // Route pour mettre à jour un utilisateur
   @Put(':id')
-    @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async updateUser(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -44,7 +45,7 @@ export class UserController {
 
   // Route pour supprimer un utilisateur
   @Delete(':id')
-    @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUser(@Param('id') id: string) {
     await this.userService.deleteUser(id);
