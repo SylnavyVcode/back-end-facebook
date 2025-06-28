@@ -12,7 +12,6 @@ import { JwtService } from '@nestjs/jwt';
 import { UserPayload } from './jwt.strategy';
 import { resetPasswordDemandDto } from './dto/ressetPasswordDemandeDto';
 import { generateCodeOTP } from 'src/utils/generateCodeOTP';
-import { MailerService } from 'src/mailer/mailer.service';
 import { EmailService } from 'src/email/email.service';
 
 @Injectable()
@@ -20,7 +19,6 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly mailerService: MailerService,
     private readonly emailService: EmailService,
   ) {}
   // Création d'un utilisateur
