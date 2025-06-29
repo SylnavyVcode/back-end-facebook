@@ -19,10 +19,40 @@ import { LikeModule } from './like/like.module';
 import { PostModule } from './post/post.module';
 import { NotificationModule } from './notification/notification.module';
 import { GroupeModule } from './groupe/groupe.module';
+import { CommentModule } from './comment/comment.module';
+import { ChatModule } from './chat/chat.module';
+import { StoryModule } from './story/story.module';
+import { AuthUtils } from './auth/authUtils';
 
 @Module({
-  imports: [UserModule, AuthModule, MailerModule, EmailModule, MessagesModule, LikeModule, PostModule, NotificationModule, GroupeModule],
-  controllers: [UserController, AuthController, EmailController, MessagesController],
-  providers: [UserService, PrismaService, AuthService, EmailService, ChatGateway, MessagesService],
+  imports: [
+    UserModule,
+    AuthModule,
+    MailerModule,
+    EmailModule,
+    MessagesModule,
+    LikeModule,
+    PostModule,
+    NotificationModule,
+    GroupeModule,
+    CommentModule,
+    ChatModule,
+    StoryModule,
+  ],
+  controllers: [
+    UserController,
+    AuthController,
+    EmailController,
+    MessagesController,
+  ],
+  providers: [
+    UserService,
+    PrismaService,
+    AuthService,
+    EmailService,
+    ChatGateway,
+    MessagesService,
+    AuthUtils
+  ],
 })
 export class AppModule {}

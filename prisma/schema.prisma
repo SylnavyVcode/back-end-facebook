@@ -13,8 +13,8 @@ generator client {
 
 // Utilisateur
 model User {
-  id             String   @id @default(cuid()) // ID unique pour chaque utilisateur
-  email          String   @unique
+  id             String    @id @default(cuid()) // ID unique pour chaque utilisateur
+  email          String    @unique
   firstname      String
   lastname       String
   telephone      String
@@ -22,41 +22,47 @@ model User {
   anniversaire   String
   profilePic     String?
   profilCoverPic String?
+  posts          Post[]
+  comments       Comment[]
+  likes          Like[]
 }
 
 // Account
 model Account {
-  id           String @id @default(cuid())
-  password     String
-  isResetingPassword     Boolean?
-  resetPasswordToken      String? @unique
-  user_id      String @unique
-  type_account String
+  id                 String   @id @default(cuid())
+  password           String
+  isResetingPassword Boolean?
+  resetPasswordToken String?  @unique
+  user_id            String   @unique
+  type_account       String
 }
-
 
 // Publication
 model Post {
-  id             String  @id @default(cuid())
-  content        String?
-  image          String?
-  video          String?
-  account_id     String
-  page_id        String?
-  comment_id     String
-  commentUser_id String
-  group_id       String?
-  privacy        Privacy @default(PRIVATE)
+  id        String    @id @default(cuid())
+  content   String?
+  image     String?
+  video     String?
+  author_id String
+  author    User      @relation(fields: [author_id], references: [id])
+  comments  Comment[]
+  likes     Like[]
+  group_id  String?
+  privacy   Privacy   @default(PRIVATE)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
-
-
 
 // Commentaire
 model Comment {
-  id         String @id @default(cuid())
-  account_id String
-  content    String
-  post_id    String
+  id        String @id @default(cuid())
+  content   String
+  image     String
+  video     String
+  post_id   String
+  post      Post   @relation(fields: [post_id], references: [id])
+  author_id String
+  author    User   @relation(fields: [author_id], references: [id])
 }
 
 // Commentaire utilisateurs
@@ -67,7 +73,7 @@ model CommentUsers {
 }
 
 // Groupe
-model Group {
+model Groupe {
   id          String  @id @default(cuid())
   name        String
   description String?
@@ -99,6 +105,7 @@ model Notification {
   message   String
   user_id   String
   createdAt DateTime @default(now())
+  read      Boolean  @default(false)
 }
 
 // Like
@@ -107,6 +114,8 @@ model Like {
   user_id    String
   post_id    String?
   comment_id String?
+  user       User    @relation(fields: [user_id], references: [id])
+  post       Post?   @relation(fields: [post_id], references: [id])
 }
 
 enum Privacy {
