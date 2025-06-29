@@ -15,6 +15,7 @@ import { MessagesService } from './messages.service';
 import { UpdateMessageDto } from './dto/updateMessageDto';
 import { CreateMessageDto } from './dto/CreateMessageDto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { Token } from 'src/utils/gestionToken';
 
 @Controller('message')
 export class MessagesController {
@@ -23,8 +24,10 @@ export class MessagesController {
   // Route pour récupérer un utilisateur par son ID
   @Post('message')
   @UseGuards(JwtAuthGuard)
-  async postMessage(@Body() messageOptions: CreateMessageDto, @Headers('authorization') authHeader: string) {
- 
+  async postMessage(
+    @Body() messageOptions: CreateMessageDto,
+    @Headers('authorization') authHeader: string,
+  ) {
     console.log('authHeader===>data>>>', authHeader);
     console.log('postMessage===>data>>>', messageOptions);
     // Vérification des données reçues
@@ -33,14 +36,21 @@ export class MessagesController {
   // Route pour récupérer un utilisateur par son ID
   @Get(':id')
   @UseGuards(JwtAuthGuard)
-  async getMessage(@Param('id') id: string) {
+  async getMessage(
+    @Param('id') id: string,
+    @Headers('authorization') authHeader: string,
+  ) {
+    console.log('authHeader===>data>>>', authHeader);
     return this.messageService.getMessage(id);
   }
 
   // Route pour récupérer tous les utilisateurs
   @Get()
   @UseGuards(JwtAuthGuard)
-  async getAllMessages() {
+  async getAllMessages(@Headers('authorization') authHeader: string) {
+    console.log('authHeader===>data>>>', authHeader);
+    const data = await Token.decode(authHeader.split(' ')[1]);
+    console.log('data===>', data);
     return this.messageService.getAllMessages();
   }
 
@@ -50,7 +60,9 @@ export class MessagesController {
   async updateMessage(
     @Param('id') id: string,
     @Body() updateMessageDto: UpdateMessageDto,
+    @Headers('authorization') authHeader: string,
   ) {
+    console.log('authHeader===>data>>>', authHeader);
     return this.messageService.updateMessage(id, updateMessageDto);
   }
 
@@ -58,7 +70,11 @@ export class MessagesController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteMessage(@Param('id') id: string) {
+  async deleteMessage(
+    @Param('id') id: string,
+    @Headers('authorization') authHeader: string,
+  ) {
+    console.log('authHeader===>data>>>', authHeader);
     return await this.messageService.deleteMessage(id);
   }
 }

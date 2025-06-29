@@ -26,7 +26,7 @@ export class LikeController {
   @Get()
   @UseGuards(JwtAuthGuard)
   async getAllLike() {
-    return this.likeService.getAllLike();
+    return this.likeService.getAllLikes();
   }
 
   // Route pour supprimer un utilisateur
@@ -34,7 +34,7 @@ export class LikeController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async dislike(@Param('id') id: string) {
-    return await this.likeService.dislike(id);
+    return await this.likeService.deleteLike(id);
   }
 }
 
