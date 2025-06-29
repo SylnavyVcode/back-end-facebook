@@ -22,6 +22,7 @@ import { GroupeModule } from './groupe/groupe.module';
 import { CommentModule } from './comment/comment.module';
 import { ChatModule } from './chat/chat.module';
 import { StoryModule } from './story/story.module';
+import { AuthUtils } from './auth/authUtils';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { StoryModule } from './story/story.module';
     EmailService,
     ChatGateway,
     MessagesService,
+    AuthUtils
   ],
 })
 export class AppModule {}
