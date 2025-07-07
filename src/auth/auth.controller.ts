@@ -16,7 +16,6 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { PrismaService } from 'src/prisma.service';
 import { RequestWith } from './jwt.strategy';
 import { UserService } from 'src/user/user.service';
-import { error } from 'console';
 
 @Controller('auth')
 export class AuthController {

@@ -8,7 +8,6 @@ import { UserService } from 'src/user/user.service';
 import { MailerModule } from 'src/mailer/mailer.module';
 import { EmailService } from 'src/email/email.service';
 import { EmailModule } from 'src/email/email.module';
-import { AuthUtils } from './authUtils';
 
 
 
@@ -20,7 +19,7 @@ import { AuthUtils } from './authUtils';
       signOptions: { expiresIn: '20d' },
     }),MailerModule, EmailModule
   ],
-  providers: [AuthService, PrismaService, JwtService, JwtStrategy, UserService, AuthService, EmailService, AuthUtils],
+  providers: [AuthService, PrismaService, JwtService, JwtStrategy, UserService, AuthService, EmailService],
   controllers: [AuthController],
 })
 export class AuthModule {}

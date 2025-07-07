@@ -15,7 +15,6 @@ import { UserPayload } from './jwt.strategy';
 import { resetPasswordDemandDto } from './dto/ressetPasswordDemandeDto';
 import { generateCodeOTP } from 'src/utils/generateCodeOTP';
 import { EmailService } from 'src/email/email.service';
-import { AuthUtils } from './authUtils';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +22,6 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
-    private readonly authUtils: AuthUtils,
   ) {}
   // Création d'un utilisateur
   async register(data: CreateUserDto) {
@@ -37,7 +35,7 @@ export class AuthService {
       throw new ConflictException('Un compte existe déjà à cet adresse.');
     }
 
-    const hashPassword: string = await this.authUtils.hashPassword({
+    const hashPassword: string = await this.hashPassword({
       password: data.password,
     });
 
@@ -67,7 +65,7 @@ export class AuthService {
         'Votre compte a été créé avec succès',
         `${data.firstname} félicitation votre compte a été créé avec succès.`,
       );
-      return this.authUtils.authentificateUser({ user_id: resp_account.id });
+      return this.authentificateUser({ user_id: resp_account.id });
       // return resp_account;
     }
   }
@@ -86,15 +84,15 @@ export class AuthService {
     });
 
     if (account) {
-      const comparePassword = await this.authUtils.comparePasswords(
-        data.password,
-        account.password,
-      );
+      const comparePassword = await this.comparePasswords({
+        password: data.password,
+        hashedPassword: account.password,
+      });
 
       if (!comparePassword) {
         throw new Error('Le mot de passe est invalid.');
       }
-      return this.authUtils.authentificateUser({ user_id: user.id });
+      return this.authentificateUser({ user_id: user.id });
     }
   }
 
@@ -197,6 +195,36 @@ export class AuthService {
       code: 200,
       status: 'success',
       message: 'Mot de passe réinitialisé.',
+    };
+  }
+
+  // Compare passwords
+  async comparePasswords({
+    password,
+    hashedPassword,
+  }: {
+    password: string;
+    hashedPassword: string;
+  }): Promise<boolean> {
+    return bcrypt.compare(password, hashedPassword);
+  }
+  // hash password
+  async hashPassword({ password }: { password: string }) {
+    const hashPass = await bcrypt.hash(password, 10);
+    return hashPass;
+  }
+
+  /**
+   * @description
+   * Cette méthode authentifie l'utilisateur en générant un token JWT.
+   * @param {UserPayload} user_id - L'identifiant de l'utilisateur.
+   * @return {Promise<{ access_token: string }>} - Un objet contenant le token d'accès.
+   */
+
+  async authentificateUser({ user_id }: UserPayload) {
+    const payload: UserPayload = { user_id };
+    return {
+      access_token: await this.jwtService.signAsync(payload),
     };
   }
 
