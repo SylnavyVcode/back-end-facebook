@@ -11,7 +11,7 @@ import { MailerModule } from './mailer/mailer.module';
 import { EmailService } from './email/email.service';
 import { EmailController } from './email/email.controller';
 import { EmailModule } from './email/email.module';
-import { ChatGateway } from './chat.gaway';
+import { AppGateway } from './app.gateway';
 import { MessagesController } from './messages/messages.controller';
 import { MessagesService } from './messages/messages.service';
 import { MessagesModule } from './messages/messages.module';
@@ -49,7 +49,7 @@ import { StoryModule } from './story/story.module';
     PrismaService,
     AuthService,
     EmailService,
-    ChatGateway,
+    AppGateway,
     MessagesService
   ],
 })
