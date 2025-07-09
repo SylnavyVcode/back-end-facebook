@@ -1,8 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, UseGuards, Headers } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { CreateMessageDto } from 'src/messages/dto/CreateMessageDto';
-import { UpdateMessageDto } from 'src/messages/dto/updateMessageDto';
 import { LikeService } from './like.service';
+import { CreateLikeDto } from './dto/CreateLikeDto';
 
 @Controller('like')
 export class LikeController {
@@ -11,7 +10,7 @@ export class LikeController {
   // Route pour récupérer un utilisateur par son ID
   @Post('message')
   @UseGuards(JwtAuthGuard)
-  async postLike(@Body() messageOptions: CreateMessageDto, @Headers('authorization') authHeader: string) {
+  async postLike(@Body() messageOptions: CreateLikeDto, @Headers('authorization') authHeader: string) {
     // Vérification des données reçues
     return this.likeService.postLike(messageOptions);
   }

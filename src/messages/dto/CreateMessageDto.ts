@@ -1,19 +1,12 @@
 import { IsOptional, IsString } from 'class-validator';
 
 export class CreateMessageDto {
-  @IsOptional()
   @IsString()
-  message: string;
+  content: string;
 
-  @IsOptional()
   @IsString()
-  sender_id: string;
+  senderId: string;
 
-  @IsOptional()
   @IsString()
-  recipient_id: string;
-
-  @IsOptional()
-  @IsString()
-  user_id: string;
+  chatId: string;
 }
