@@ -1,5 +1,5 @@
 export class UpdateMessageDto {
   content?: string;
-  senderId?: string;
-  chatId?: string;
+  sender_id?: string;
+  chat_id?: string;
 }

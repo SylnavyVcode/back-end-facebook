@@ -15,10 +15,10 @@ export class ChatService {
 
   async createConversation({
     createConversationDto: { recipientId },
-    userId,
+    user_id,
   }: {
     createConversationDto: CreateConversationDto;
-    userId: string;
+    user_id: string;
   }) {
     try {
       const [existingRecipient, existingUser] = await Promise.all([
@@ -29,7 +29,7 @@ export class ChatService {
         }),
         this.prisma.user.findUnique({
           where: {
-            id: userId,
+            id: user_id,
           },
         }),
       ]);
@@ -72,11 +72,11 @@ export class ChatService {
   async sendChat({
     sendChatDto,
     conversationId,
-    senderId,
+    sender_id,
   }: {
     sendChatDto: SendChatDto;
     conversationId: string;
-    senderId: string;
+    sender_id: string;
   }) {
     try {
       const [existingConversation, existingUser] = await Promise.all([
@@ -87,7 +87,7 @@ export class ChatService {
         }),
         this.prisma.user.findUnique({
           where: {
-            id: senderId,
+            id: sender_id,
           },
         }),
       ]);
@@ -123,7 +123,7 @@ export class ChatService {
               sender: {
                 select: {
                   id: true,
-                  firstName: true,
+                  firstname: true,
                 },
               },
             },
@@ -152,21 +152,21 @@ export class ChatService {
     }
   }
 
-  async getConversations({ userId }: { userId: string }) {
+  async getConversations({ user_id }: { user_id: string }) {
     const existingUser = await this.prisma.user.findUnique({
       where: {
-        id: userId,
+        id: user_id,
       },
       select: {
-        conversations: {
+        Conversations: {
           select: {
             id: true,
             updatedAt: true,
             users: {
               select: {
                 id: true,
-                firstName: true,
-                avatarFileKey: true,
+                firstname: true,
+                profilePic: true,
               },
             },
             messages: {
@@ -176,7 +176,7 @@ export class ChatService {
                 sender: {
                   select: {
                     id: true,
-                    firstName: true,
+                    firstname: true,
                   },
                 },
               },
@@ -196,15 +196,15 @@ export class ChatService {
       throw new Error("L'utilisateur n'existe pas.");
     }
     const conversationsWithAvatars = await Promise.all(
-      existingUser.conversations.map(async (conversation) => {
+      existingUser.Conversations.map(async (conversation) => {
         return {
           ...conversation,
           users: await Promise.all(
             conversation.users.map(async (user) => {
               let avatarUrl = '';
-              if (user.avatarFileKey) {
+              if (user.profilePic) {
                 avatarUrl = await this.awsS3Service.getFileUrl({
-                  fileKey: user.avatarFileKey,
+                  fileKey: user.profilePic,
                 });
               }
               return { ...user, avatarUrl };
@@ -218,15 +218,15 @@ export class ChatService {
   }
 
   async getConversation({
-    userId,
+    user_id,
     conversationId,
   }: {
-    userId: string;
+    user_id: string;
     conversationId: string;
   }) {
     const existingUser = await this.prisma.user.findUnique({
       where: {
-        id: userId,
+        id: user_id,
       },
     });
     if (!existingUser) {
@@ -242,10 +242,10 @@ export class ChatService {
         updatedAt: true,
         users: {
           select: {
-            firstName: true,
+            firstname: true,
             id: true,
-            avatarFileKey: true,
-            receivedDonations: {
+            profilePic: true,
+            donationsReceived: {
               select: {
                 amount: true,
                 id: true,
@@ -255,7 +255,7 @@ export class ChatService {
                 givingUserId: existingUser.id,
               },
             },
-            givenDonations: {
+            donationsGiven: {
               select: {
                 amount: true,
                 id: true,
@@ -274,7 +274,7 @@ export class ChatService {
             sender: {
               select: {
                 id: true,
-                firstName: true,
+                firstname: true,
               },
             },
           },
@@ -293,9 +293,9 @@ export class ChatService {
       users: await Promise.all(
         conversation.users.map(async (user) => {
           let avatarUrl = '';
-          if (user.avatarFileKey) {
+          if (user.profilePic) {
             avatarUrl = await this.awsS3Service.getFileUrl({
-              fileKey: user.avatarFileKey,
+              fileKey: user.profilePic,
             });
           }
           return { ...user, avatarUrl };

@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 // import { jwtConstants } from './constants';
 
 export type UserPayload = { user_id: string };
-export type RequestWith = { user: UserPayload };
+export type RequestWithUser = { user: UserPayload };
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
