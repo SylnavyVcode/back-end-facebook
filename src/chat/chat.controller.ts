@@ -24,7 +24,7 @@ export class ChatController {
   ) {
     return await this.chatService.createConversation({
       createConversationDto,
-      userId: request.user.userId,
+      user_id: request.user.user_id,
     });
   }
   @UseGuards(JwtAuthGuard)
@@ -37,7 +37,7 @@ export class ChatController {
     return await this.chatService.sendChat({
       sendChatDto,
       conversationId,
-      senderId: request.user.userId,
+      sender_id: request.user.user_id,
     });
   }
 
@@ -45,7 +45,7 @@ export class ChatController {
   @Get()
   async getConversations(@Request() request: RequestWithUser) {
     return await this.chatService.getConversations({
-      userId: request.user.userId,
+      user_id: request.user.user_id,
     });
   }
 
@@ -57,7 +57,7 @@ export class ChatController {
   ) {
     return await this.chatService.getConversation({
       conversationId,
-      userId: request.user.userId,
+      user_id: request.user.user_id,
     });
   }
 }

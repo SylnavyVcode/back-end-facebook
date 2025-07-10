@@ -14,7 +14,7 @@ import { CreateUserDto } from 'src/user/dto/CreateUserDto';
 import { signInDto } from './dto/signInDto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { PrismaService } from 'src/prisma.service';
-import { RequestWith } from './jwt.strategy';
+import { RequestWithUser } from './jwt.strategy';
 import { UserService } from 'src/user/user.service';
 
 @Controller('auth')
@@ -69,7 +69,7 @@ export class AuthController {
     // } else {
     //   //
     // }
-    return
+    return;
   }
   // Route pour se connecter
   @Get('validate-reset-password')
@@ -87,7 +87,7 @@ export class AuthController {
 
   @Get('user')
   @UseGuards(JwtAuthGuard)
-  async authenticateUser(@Request() req: RequestWith) {
+  async authenticateUser(@Request() req: RequestWithUser) {
     // console.log(req.user);
 
     if (!req.user) {

@@ -7,7 +7,7 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { createId } from '@paralleldrive/cuid2';
 import 'dotenv/config';
-import { fileSchema } from 'src/file-utils';
+import {fileSchema} from 'src/file-utils'
 import { z } from 'zod';
 
 const AWS_ACCESS_KEY = process.env.AWS_ACCESS_KEY;

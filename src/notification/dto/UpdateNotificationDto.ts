@@ -15,4 +15,7 @@ export class UpdateNotificationDto {
 
   @IsOptional()
   read?: boolean;
+  
+  @IsOptional()
+  content?: string;
 }
