@@ -12,8 +12,8 @@ export class MessagesService {
     const message = await this.prisma.message.create({
       data: {
         content: data.content,
-        senderId: data.senderId,
-        chatId: data.chatId,
+        sender_id: data.sender_id,
+        chat_id: data.chat_id,
       },
     });
 
@@ -56,8 +56,8 @@ export class MessagesService {
       where: { id },
       data: {
         content: data.content,
-        senderId: data.senderId,
-        chatId: data.chatId,
+        sender_id: data.sender_id,
+        chat_id: data.chat_id,
       },
     });
 

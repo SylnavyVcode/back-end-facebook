@@ -5,8 +5,8 @@ export class CreateMessageDto {
   content: string;
 
   @IsString()
-  senderId: string;
+  sender_id: string;
 
   @IsString()
-  chatId: string;
+  chat_id: string;
 }
