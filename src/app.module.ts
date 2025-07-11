@@ -22,6 +22,7 @@ import { GroupeModule } from './groupe/groupe.module';
 import { CommentModule } from './comment/comment.module';
 import { ChatModule } from './chat/chat.module';
 import { StoryModule } from './story/story.module';
+import { SocketModule } from './socket/socket.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { StoryModule } from './story/story.module';
     CommentModule,
     ChatModule,
     StoryModule,
+    SocketModule,
   ],
   controllers: [
     UserController,
@@ -50,7 +52,7 @@ import { StoryModule } from './story/story.module';
     AuthService,
     EmailService,
     AppGateway,
-    MessagesService
+    MessagesService,
   ],
 })
 export class AppModule {}
