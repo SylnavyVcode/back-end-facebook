@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AwsS3Service } from 'src/aws/aws-s3.service';
+// import { AwsS3Service } from 'src/aws/aws-s3.service';
 import { PrismaService } from 'src/prisma.service';
 import { SocketService } from 'src/socket/socket.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
@@ -10,7 +10,7 @@ export class ChatService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly socketService: SocketService,
-    private readonly awsS3Service: AwsS3Service,
+    // private readonly awsS3Service: AwsS3Service,
   ) {}
 
   async createConversation({
@@ -202,11 +202,11 @@ export class ChatService {
           users: await Promise.all(
             conversation.users.map(async (user) => {
               let avatarUrl = '';
-              if (user.profilePic) {
-                avatarUrl = await this.awsS3Service.getFileUrl({
-                  fileKey: user.profilePic,
-                });
-              }
+              // if (user.profilePic) {
+              //   avatarUrl = await this.awsS3Service.getFileUrl({
+              //     fileKey: user.profilePic,
+              //   });
+              // }
               return { ...user, avatarUrl };
             }),
           ),
@@ -293,11 +293,11 @@ export class ChatService {
       users: await Promise.all(
         conversation.users.map(async (user) => {
           let avatarUrl = '';
-          if (user.profilePic) {
-            avatarUrl = await this.awsS3Service.getFileUrl({
-              fileKey: user.profilePic,
-            });
-          }
+          // if (user.profilePic) {
+          //   avatarUrl = await this.awsS3Service.getFileUrl({
+          //     fileKey: user.profilePic,
+          //   });
+          // }
           return { ...user, avatarUrl };
         }),
       ),
