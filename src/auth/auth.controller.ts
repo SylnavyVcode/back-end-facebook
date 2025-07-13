@@ -61,10 +61,11 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async resetPassword(@Body() authBody: any) {
-    console.log('reset-password data ======>>>', authBody.newPassword);
-    const password = authBody.newPassword;
+    console.log('reset-password data ======>>>', authBody);
+    const password = authBody.new_password;
+    const OTP = authBody.OTP;
     let response = await this.authService.confirmPasswordReset(
-      '994935',
+      OTP.token,
       password.new_password,
     );
     if (response!) {
