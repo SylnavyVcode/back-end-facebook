@@ -48,9 +48,9 @@ export class AuthController {
   @Post('reset')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async reset(@Body() authBody: { email: string }) {
-    console.log('login data reset====>>>>', authBody);
-    let response = await this.authService.resetPasswordRequest(authBody);
+  async reset(@Body() authBody: any) {
+    const { email } = authBody.data;
+    let response = await this.authService.resetPasswordRequest({ email });
     if (response!) {
       return response;
     }
@@ -60,15 +60,18 @@ export class AuthController {
   @Post('reset-password')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async resetPassword(@Body() authBody: { now_password: string }) {
-    console.log('reset-password data ======>>>', authBody);
-    // let response =
-    //   await this.authService.resetPasswordAccountDisconnet(authBody);
-    // if (response!) {
-    //   return response;
-    // } else {
-    //   //
-    // }
+  async resetPassword(@Body() authBody: any) {
+    console.log('reset-password data ======>>>', authBody.newPassword);
+    const password = authBody.newPassword;
+    let response = await this.authService.confirmPasswordReset(
+      '994935',
+      password.new_password,
+    );
+    if (response!) {
+      return response;
+    } else {
+      //
+    }
     return;
   }
   // Route pour se connecter

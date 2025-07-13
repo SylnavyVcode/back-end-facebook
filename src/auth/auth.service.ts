@@ -98,9 +98,13 @@ export class AuthService {
 
   // resetPasswordRequest
   async resetPasswordRequest({ email }: { email: string }) {
+    console.log('email', email);
+
     const user = await this.prisma.user.findUnique({
       where: { email: email },
     });
+   
+
     if (!user) {
       return {
         code: 400,
@@ -176,9 +180,9 @@ export class AuthService {
     };
   }
 
-  async confirmPasswordReset(token: string, newPassword: string) {
+  async confirmPasswordReset(OTP: string, newPassword: string) {
     const account = await this.prisma.account.findFirst({
-      where: { resetPasswordToken: token, isResetingPassword: true },
+      where: { resetPasswordToken: OTP, isResetingPassword: true },
     });
     if (!account) throw new BadRequestException('Token invalide.');
 
