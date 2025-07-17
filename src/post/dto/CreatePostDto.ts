@@ -1,7 +1,6 @@
 import { IsOptional, IsString } from 'class-validator';
 
 export class CreatePostDto {
- 
   @IsString()
   content: string;
 
@@ -23,5 +22,4 @@ export class CreatePostDto {
   @IsOptional()
   @IsString()
   page_id?: string;
-
 }

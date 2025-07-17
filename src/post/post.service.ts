@@ -47,7 +47,9 @@ export class PostService {
 
   // Récupérer tous les Post (optionnel : pagination)
   async getAllPublifications() {
+
     const post = await this.prisma.post.findMany({
+      where:{},
       include: {
         author: true,
         comments: true,
