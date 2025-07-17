@@ -10,44 +10,58 @@ import {
   Put,
   UseGuards,
   Headers,
+  Req,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreatePostDto } from './dto/CreatePostDto';
 import { UpdatePostDto } from './dto/UpdatePostDto';
 import { PostService } from './post.service';
+import { JwtStrategy, UserPayload } from 'src/auth/jwt.strategy';
 
 @Controller('post')
 export class PostController {
-  constructor(private readonly postService: PostService) {}
+  constructor(
+    private readonly postService: PostService,
+    jwtStrategie: JwtStrategy,
+  ) {}
 
   // Route pour récupérer un Publification par son ID
   @Post('message')
   @UseGuards(JwtAuthGuard)
   async postPublification(
-    @Body() messageOptions: CreatePostDto,
-    @Headers('authorization') authHeader: string,
+    @Body() messageOptions: any,
+    @Req() req: Request & { user: UserPayload },
   ) {
-    console.log('authHeader===>data>>>', authHeader);
-    console.log('postPublification===>data>>>', messageOptions);
+    const user = req.user;
+    console.log('user extrait du token ===>', user); // { user_id: '...' }
+    const messageWithUser = {
+      ...messageOptions,
+      author_id: user.user_id, // injecte automatiquement l'ID de l'auteur depuis le token
+    };
+    console.log('postPublification===>data>>>', messageWithUser);
+
     // Vérification des données reçues
-    return this.postService.postPublification(messageOptions);
+    return this.postService.postPublification(messageWithUser);
   }
   // Route pour récupérer un Publification par son ID
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   async getPublification(
     @Param('id') id: string,
-    @Headers('authorization') authHeader: string,
+
+    @Req() req: Request & { user: UserPayload },
   ) {
-    console.log('authHeader===>data>>>', authHeader);
+    const user = req.user;
+    console.log('user extrait du token ===>', user); // { user_id: '...' }
     return this.postService.getPublification(id);
   }
 
   // Route pour récupérer tous les Publifications
   @Get()
   @UseGuards(JwtAuthGuard)
-  async getAllPublifications(@Headers('authorization') authHeader: string) {
-    console.log('authHeader===>data>>>', authHeader);
+  async getAllPublifications(@Req() req: Request & { user: UserPayload }) {
+    const user = req.user;
+    console.log('user extrait du token ===>', user); // { user_id: '...' }
     return this.postService.getAllPublifications();
   }
 
@@ -57,9 +71,11 @@ export class PostController {
   async updatePublification(
     @Param('id') id: string,
     @Body() updatePostDto: UpdatePostDto,
-    @Headers('authorization') authHeader: string,
+
+    @Req() req: Request & { user: UserPayload },
   ) {
-    console.log('authHeader===>data>>>', authHeader);
+    const user = req.user;
+    console.log('user extrait du token ===>', user); // { user_id: '...' }
     return this.postService.updatePublification(id, updatePostDto);
   }
 
