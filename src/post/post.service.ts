@@ -14,8 +14,8 @@ export class PostService {
     const post = await this.prisma.post.create({
       data: {
         content: data?.content ? data?.content : null,
-        image: data?.image ? data?.image : null,
-        video: data?.video ? data?.video : null,
+        image: data?.image ? JSON.stringify(data?.image) : null,
+        video: data?.video ? JSON.stringify(data?.video) : null,
         author_id: data?.author_id,
         group_id: data?.group_id ? data?.group_id : null,
       },
@@ -44,12 +44,12 @@ export class PostService {
 
     return post;
   }
+  async getAllPublifications(page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
 
-  // Récupérer tous les Post (optionnel : pagination)
-  async getAllPublifications() {
-
-    const post = await this.prisma.post.findMany({
-      where:{},
+    const posts = await this.prisma.post.findMany({
+      skip,
+      take: limit,
       include: {
         author: true,
         comments: true,
@@ -57,9 +57,17 @@ export class PostService {
       },
       orderBy: { createdAt: 'desc' },
     });
-    console.log('>>>>>>all post)===', post);
 
-    return post;
+    // Vérifie s’il reste des données après la page actuelle
+    const totalPosts = await this.prisma.post.count();
+    const hasMore = skip + posts.length < totalPosts;
+
+    return {
+      data: posts,
+      hasMore,
+      currentPage: page,
+      totalPages: Math.ceil(totalPosts / limit),
+    };
   }
 
   // Mettre à jour un Post
@@ -68,8 +76,8 @@ export class PostService {
       where: { id },
       data: {
         content: data?.content,
-        image: data?.image,
-        video: data?.video,
+        image: JSON.stringify(data?.image),
+        video: JSON.stringify(data?.video),
       },
     });
     console.log('resp_post', resp_post);
@@ -85,7 +93,7 @@ export class PostService {
     const resp_post = await this.prisma.post.findUnique({
       where: { id },
     });
-      if (resp_post?.author_id !== user_id) throw new Error('Not authorized');
+    if (resp_post?.author_id !== user_id) throw new Error('Not authorized');
 
     const deletepost = await this.prisma.post.delete({
       where: { id: resp_post?.id },

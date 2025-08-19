@@ -11,6 +11,7 @@ import {
   UseGuards,
   Headers,
   Req,
+  Query,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreatePostDto } from './dto/CreatePostDto';
@@ -58,12 +59,20 @@ export class PostController {
 
   // Route pour récupérer tous les Publifications
   @Get()
-  @UseGuards(JwtAuthGuard)
-  async getAllPublifications(@Req() req: Request & { user: UserPayload }) {
-    const user = req.user;
-    console.log('user extrait du token ===>', user); // { user_id: '...' }
-    return this.postService.getAllPublifications();
-  }
+@UseGuards(JwtAuthGuard)
+async getAllPublifications(
+  @Req() req: Request & { user: UserPayload },
+  @Query('page') page = '1',
+  @Query('limit') limit = '10'
+) {
+  const user = req.user;
+  const currentPage = parseInt(page, 10);
+  const itemsPerPage = parseInt(limit, 10);
+
+  console.log('user extrait du token ===>', user); // { user_id: '...' }
+
+  return this.postService.getAllPublifications(currentPage, itemsPerPage);
+}
 
   // Route pour mettre à jour un Publification
   @Put(':id')

@@ -25,8 +25,8 @@ model User {
   posts          Post[]
   comments       Comment[]
   likes          Like[]
-  Conversations   Conversation[]
-  Messages        Message[]
+  Conversations  Conversation[]
+  Messages       Message[]
 
   donationsGiven    Donation[] @relation("givingUser")
   donationsReceived Donation[] @relation("receivingUser")
@@ -35,7 +35,7 @@ model User {
 model Conversation {
   id        String    @id @default(cuid())
   createdAt DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  updatedAt DateTime  @updatedAt
   users     User[]
   messages  Message[]
 }
@@ -124,7 +124,7 @@ model Donation {
   givingUser   User   @relation("givingUser", fields: [givingUserId], references: [id])
   givingUserId String
 
-  receivingUser   User    @relation("receivingUser", fields: [receivingUserId], references: [id])
+  receivingUser   User   @relation("receivingUser", fields: [receivingUserId], references: [id])
   receivingUserId String
   // Amount is in cents
   amount          Int?
