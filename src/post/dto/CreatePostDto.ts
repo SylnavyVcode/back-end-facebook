@@ -6,11 +6,11 @@ export class CreatePostDto {
 
   @IsOptional()
   @IsArray()
-  image?: string;
+  image?: Array<string> | null;
 
   @IsOptional()
    @IsArray()
-  video?: string;
+  video?: Array<string> | null;
 
   @IsString()
   author_id: string;

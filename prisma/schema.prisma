@@ -54,8 +54,8 @@ model Account {
 model Post {
   id        String    @id @default(cuid())
   content   String?
-  image     String?
-  video     String?
+  image     Image[]
+  video     Video[]
   author_id String
   author    User      @relation(fields: [author_id], references: [id])
   comments  Comment[]
@@ -64,6 +64,20 @@ model Post {
   privacy   Privacy   @default(PRIVATE)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+model Image {
+  id     Int    @id @default(autoincrement())
+  url    String
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Video {
+  id     Int    @id @default(autoincrement())
+  url    String
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
 
 // Commentaire
