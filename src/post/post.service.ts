@@ -130,22 +130,30 @@ export class PostService {
 
   // Mettre à jour un Post
   async updatePublification(id: string, data: UpdatePostDto) {
-    const resp_post = await this.prisma.post.update({
-      where: { id },
-      data: {
-        content: data?.content,
-      },
-      include: {
-        author: true,
-        image: true,
-        video: true,
-      },
-    });
+    console.log('Update data:', data);
+    
+    // const resp_post = await this.prisma.post.update({
+    //   where: { id },
+    //   data: {
+    //     content: data?.content,
+    //     likes: data?.likes,
+    //     comments: data?.comments,
+    //     video: data?.videos,
+    //     image: data?.images,
+    //   },
+    //   include: {
+    //     author: true,
+    //     image: true,
+    //     video: true,
+    //     likes: true,
+    //     comments: true,
+    //   },
+    // });
 
-    if (!resp_post) {
-      throw new NotFoundException(`Post with ID ${id} not found`);
-    }
-    return resp_post;
+    // if (!resp_post) {
+    //   throw new NotFoundException(`Post with ID ${id} not found`);
+    // }
+    // return resp_post;
   }
 
   // Supprimer un Post

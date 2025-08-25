@@ -6,9 +6,17 @@ export class UpdatePostDto {
 
   @IsOptional()
   @IsArray()
-  image?: string;
+  likes?: Array<any>;
 
   @IsOptional()
   @IsArray()
-  video?: string;
+  comments?: Array<any>;
+
+  @IsOptional()
+  @IsArray()
+  image?: Array<any>;
+
+  @IsOptional()
+  @IsArray()
+  video?: Array<any>;
 }
