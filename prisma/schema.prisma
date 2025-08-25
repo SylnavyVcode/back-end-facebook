@@ -25,8 +25,8 @@ model User {
   posts          Post[]
   comments       Comment[]
   likes          Like[]
-  Conversations   Conversation[]
-  Messages        Message[]
+  Conversations  Conversation[]
+  Messages       Message[]
 
   donationsGiven    Donation[] @relation("givingUser")
   donationsReceived Donation[] @relation("receivingUser")
@@ -35,7 +35,7 @@ model User {
 model Conversation {
   id        String    @id @default(cuid())
   createdAt DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  updatedAt DateTime  @updatedAt
   users     User[]
   messages  Message[]
 }
@@ -54,8 +54,8 @@ model Account {
 model Post {
   id        String    @id @default(cuid())
   content   String?
-  image     String?
-  video     String?
+  image     Image[]
+  video     Video[]
   author_id String
   author    User      @relation(fields: [author_id], references: [id])
   comments  Comment[]
@@ -64,6 +64,20 @@ model Post {
   privacy   Privacy   @default(PRIVATE)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+model Image {
+  id     Int    @id @default(autoincrement())
+  url    String
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Video {
+  id     Int    @id @default(autoincrement())
+  url    String
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
 
 // Commentaire
@@ -124,7 +138,7 @@ model Donation {
   givingUser   User   @relation("givingUser", fields: [givingUserId], references: [id])
   givingUserId String
 
-  receivingUser   User    @relation("receivingUser", fields: [receivingUserId], references: [id])
+  receivingUser   User   @relation("receivingUser", fields: [receivingUserId], references: [id])
   receivingUserId String
   // Amount is in cents
   amount          Int?

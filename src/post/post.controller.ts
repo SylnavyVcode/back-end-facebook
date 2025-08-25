@@ -11,12 +11,19 @@ import {
   UseGuards,
   Headers,
   Req,
+  Query,
+  UseInterceptors,
+  UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreatePostDto } from './dto/CreatePostDto';
 import { UpdatePostDto } from './dto/UpdatePostDto';
 import { PostService } from './post.service';
 import { JwtStrategy, UserPayload } from 'src/auth/jwt.strategy';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 @Controller('post')
 export class PostController {
@@ -28,19 +35,48 @@ export class PostController {
   // Route pour récupérer un Publification par son ID
   @Post('message')
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FilesInterceptor('images', 10, {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, callback) => {
+          console.log('file', file);
+          const uniqueName =
+            Date.now() +
+            '-' +
+            Math.round(Math.random() * 1e9) +
+            extname(file.originalname);
+          callback(null, uniqueName);
+        },
+      }),
+    }),
+  )
   async postPublification(
     @Body() messageOptions: any,
     @Req() req: Request & { user: UserPayload },
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
+    console.log('files', files);
+    console.log('messageOptions', messageOptions);
+
     const user = req.user;
-    console.log('user extrait du token ===>', user); // { user_id: '...' }
+
+    // Créer les URLs complètes pour les images
+    const imageUrls =
+      files && files.length > 0
+        ? files.map((file) => `http://localhost:3000/uploads/${file.filename}`)
+        : [];
+
+    console.log('imageUrls générées:', imageUrls);
+
     const messageWithUser = {
       ...messageOptions,
-      author_id: user.user_id, // injecte automatiquement l'ID de l'auteur depuis le token
+      author_id: user.user_id,
+      image: imageUrls, // Passer le tableau d'URLs
     };
-    console.log('postPublification===>data>>>', messageWithUser);
 
-    // Vérification des données reçues
+    console.log('Données finales à sauvegarder:', messageWithUser);
+
     return this.postService.postPublification(messageWithUser);
   }
   // Route pour récupérer un Publification par son ID
@@ -59,10 +95,18 @@ export class PostController {
   // Route pour récupérer tous les Publifications
   @Get()
   @UseGuards(JwtAuthGuard)
-  async getAllPublifications(@Req() req: Request & { user: UserPayload }) {
+  async getAllPublifications(
+    @Req() req: Request & { user: UserPayload },
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
     const user = req.user;
+    const currentPage = parseInt(page, 10);
+    const itemsPerPage = parseInt(limit, 10);
+
     console.log('user extrait du token ===>', user); // { user_id: '...' }
-    return this.postService.getAllPublifications();
+
+    return this.postService.getAllPublifications(currentPage, itemsPerPage);
   }
 
   // Route pour mettre à jour un Publification
