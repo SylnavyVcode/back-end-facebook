@@ -41,14 +41,35 @@ export class PostService {
     }
 
     // Retourner le post complet avec ses relations
+   
     const completePost = await this.prisma.post.findUnique({
       where: { id: post.id },
       include: {
         author: true,
         image: true,
         video: true,
-        comments: true,
-        likes: true,
+        comments: {
+          include: {
+            author: {
+              select: {
+                firstname: true,
+                lastname: true,
+                profilePic: true,
+              },
+            },
+          },
+        },
+        likes: {
+          include: {
+            user: {
+              select: {
+                firstname: true,
+                lastname: true,
+                profilePic: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -128,32 +149,85 @@ export class PostService {
     };
   }
 
-  // Mettre à jour un Post
+// Mettre à jour un Post - VERSION CORRIGÉE
   async updatePublification(id: string, data: UpdatePostDto) {
     console.log('Update data:', data);
     
-    // const resp_post = await this.prisma.post.update({
-    //   where: { id },
-    //   data: {
-    //     content: data?.content,
-    //     likes: data?.likes,
-    //     comments: data?.comments,
-    //     video: data?.videos,
-    //     image: data?.images,
-    //   },
-    //   include: {
-    //     author: true,
-    //     image: true,
-    //     video: true,
-    //     likes: true,
-    //     comments: true,
-    //   },
-    // });
+    // Vérifier que le post existe
+    const existingPost = await this.prisma.post.findUnique({
+      where: { id },
+      include: {
+        image: true,
+        video: true,
+      },
+    });
 
-    // if (!resp_post) {
-    //   throw new NotFoundException(`Post with ID ${id} not found`);
-    // }
-    // return resp_post;
+    if (!existingPost) {
+      throw new NotFoundException(`Post with ID ${id} not found`);
+    }
+
+    // Transaction pour mettre à jour le post et ses relations
+    const updatedPost = await this.prisma.$transaction(async (prisma) => {
+      // 1. Mettre à jour le contenu du post
+      const post = await prisma.post.update({
+        where: { id },
+        data: {
+          content: data?.content !== undefined ? data.content : existingPost.content,
+          // On ne peut pas mettre à jour directement likes et comments ici
+          // car ce sont des relations
+        },
+      });
+
+      // 2. Gérer les images si nécessaire
+      if (data.image !== undefined) {
+        // Supprimer les anciennes images
+        await prisma.image.deleteMany({
+          where: { postId: id },
+        });
+
+        // Ajouter les nouvelles images
+        if (Array.isArray(data.image) && data.image.length > 0) {
+          await prisma.image.createMany({
+            data: data.image.map((url: string) => ({
+              url,
+              postId: id,
+            })),
+          });
+        }
+      }
+
+      // 3. Gérer les vidéos si nécessaire
+      if (data.video !== undefined) {
+        // Supprimer les anciennes vidéos
+        await prisma.video.deleteMany({
+          where: { postId: id },
+        });
+
+        // Ajouter les nouvelles vidéos
+        if (Array.isArray(data.video) && data.video.length > 0) {
+          await prisma.video.createMany({
+            data: data.video.map((url: string) => ({
+              url,
+              postId: id,
+            })),
+          });
+        }
+      }
+
+      // 4. Retourner le post complet mis à jour
+      return await prisma.post.findUnique({
+        where: { id },
+        include: {
+          author: true,
+          image: true,
+          video: true,
+          likes: true,
+          comments: true,
+        },
+      });
+    });
+
+    return updatedPost;
   }
 
   // Supprimer un Post

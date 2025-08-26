@@ -109,18 +109,33 @@ export class PostController {
     return this.postService.getAllPublifications(currentPage, itemsPerPage);
   }
 
-  // Route pour mettre à jour un Publification
-  @Put(':id')
-  @UseGuards(JwtAuthGuard)
-  async updatePublification(
+   async updatePublification(
     @Param('id') id: string,
-    @Body() updatePostDto: UpdatePostDto,
-
+    @Body() updatePostDto: any, // Changé en any pour gérer FormData
     @Req() req: Request & { user: UserPayload },
+    @UploadedFiles() files?: Express.Multer.File[],
   ) {
     const user = req.user;
-    console.log('user extrait du token ===>', user); // { user_id: '...' }
-    return this.postService.updatePublification(id, updatePostDto);
+    console.log('user extrait du token ===>', user);
+    console.log('updatePostDto:', updatePostDto);
+    console.log('files for update:', files);
+
+    // Gérer les nouvelles images uploadées
+    let imageUrls: string[] = [];
+    if (files && files.length > 0) {
+      imageUrls = files.map((file) => `http://localhost:3000/uploads/${file.filename}`);
+    }
+
+    // Construire les données de mise à jour
+    const updateData: UpdatePostDto = {
+      content: updatePostDto.content,
+      image: imageUrls.length > 0 ? imageUrls : updatePostDto.images,
+      video: updatePostDto.videos,
+    };
+
+    console.log('Final update data:', updateData);
+
+    return this.postService.updatePublification(id, updateData);
   }
 
   // Route pour supprimer un Publification
