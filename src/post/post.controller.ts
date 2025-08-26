@@ -13,7 +13,6 @@ import {
   Req,
   Query,
   UseInterceptors,
-  UploadedFile,
   UploadedFiles,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -21,7 +20,7 @@ import { CreatePostDto } from './dto/CreatePostDto';
 import { UpdatePostDto } from './dto/UpdatePostDto';
 import { PostService } from './post.service';
 import { JwtStrategy, UserPayload } from 'src/auth/jwt.strategy';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 
@@ -32,7 +31,8 @@ export class PostController {
     jwtStrategie: JwtStrategy,
   ) {}
 
-  // Route pour récupérer un Publification par son ID
+  // === ROUTES POUR LES POSTS ===
+
   @Post('message')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
@@ -40,7 +40,6 @@ export class PostController {
       storage: diskStorage({
         destination: './uploads',
         filename: (req, file, callback) => {
-          console.log('file', file);
           const uniqueName =
             Date.now() +
             '-' +
@@ -56,89 +55,76 @@ export class PostController {
     @Req() req: Request & { user: UserPayload },
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    console.log('files', files);
-    console.log('messageOptions', messageOptions);
-
     const user = req.user;
-
-    // Créer les URLs complètes pour les images
     const imageUrls =
       files && files.length > 0
         ? files.map((file) => `http://localhost:3000/uploads/${file.filename}`)
         : [];
 
-    console.log('imageUrls générées:', imageUrls);
-
     const messageWithUser = {
       ...messageOptions,
       author_id: user.user_id,
-      image: imageUrls, // Passer le tableau d'URLs
+      image: imageUrls,
     };
-
-    console.log('Données finales à sauvegarder:', messageWithUser);
 
     return this.postService.postPublification(messageWithUser);
   }
-  // Route pour récupérer un Publification par son ID
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
-  async getPublification(
-    @Param('id') id: string,
-
-    @Req() req: Request & { user: UserPayload },
-  ) {
-    const user = req.user;
-    console.log('user extrait du token ===>', user); // { user_id: '...' }
+  async getPublification(@Param('id') id: string) {
     return this.postService.getPublification(id);
   }
 
-  // Route pour récupérer tous les Publifications
   @Get()
   @UseGuards(JwtAuthGuard)
   async getAllPublifications(
-    @Req() req: Request & { user: UserPayload },
     @Query('page') page = '1',
     @Query('limit') limit = '10',
   ) {
-    const user = req.user;
     const currentPage = parseInt(page, 10);
     const itemsPerPage = parseInt(limit, 10);
-
-    console.log('user extrait du token ===>', user); // { user_id: '...' }
-
     return this.postService.getAllPublifications(currentPage, itemsPerPage);
   }
 
-   async updatePublification(
+  @Put(':id')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FilesInterceptor('images', 10, {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, callback) => {
+          const uniqueName =
+            Date.now() +
+            '-' +
+            Math.round(Math.random() * 1e9) +
+            extname(file.originalname);
+          callback(null, uniqueName);
+        },
+      }),
+    }),
+  )
+  async updatePublification(
     @Param('id') id: string,
-    @Body() updatePostDto: any, // Changé en any pour gérer FormData
-    @Req() req: Request & { user: UserPayload },
+    @Body() updatePostDto: any,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    const user = req.user;
-    console.log('user extrait du token ===>', user);
-    console.log('updatePostDto:', updatePostDto);
-    console.log('files for update:', files);
-
-    // Gérer les nouvelles images uploadées
     let imageUrls: string[] = [];
     if (files && files.length > 0) {
-      imageUrls = files.map((file) => `http://localhost:3000/uploads/${file.filename}`);
+      imageUrls = files.map(
+        (file) => `http://localhost:3000/uploads/${file.filename}`,
+      );
     }
 
-    // Construire les données de mise à jour
     const updateData: UpdatePostDto = {
       content: updatePostDto.content,
       image: imageUrls.length > 0 ? imageUrls : updatePostDto.images,
       video: updatePostDto.videos,
     };
 
-    console.log('Final update data:', updateData);
-
     return this.postService.updatePublification(id, updateData);
   }
 
-  // Route pour supprimer un Publification
   @Delete('user_id/:id')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -147,5 +133,80 @@ export class PostController {
     @Headers('user_id') user_id?: string,
   ) {
     return await this.postService.deletePublification(id, user_id);
+  }
+
+  // === ROUTES POUR LES LIKES ===
+
+  @Post(':id/like')
+  @UseGuards(JwtAuthGuard)
+  async toggleLike(
+    @Param('id') postId: string,
+    @Req() req: Request & { user: UserPayload },
+  ) {
+    const user = req.user;
+    return this.postService.toggleLike(postId, user.user_id);
+  }
+
+  @Get(':id/likes')
+  @UseGuards(JwtAuthGuard)
+  async getLikes(@Param('id') postId: string) {
+    return this.postService.getLikes(postId);
+  }
+
+  // === ROUTES POUR LES COMMENTAIRES ===
+
+  @Post(':id/comments')
+  @UseGuards(JwtAuthGuard)
+  async addComment(
+    @Param('id') postId: string,
+    @Body() commentData: { content: string; image?: string; video?: string },
+    @Req() req: Request & { user: UserPayload },
+  ) {
+    const user = req.user;
+    return this.postService.addComment(
+      postId,
+      user.user_id,
+      commentData.content,
+      commentData.image,
+      commentData.video,
+    );
+  }
+
+  @Get(':id/comments')
+  @UseGuards(JwtAuthGuard)
+  async getComments(
+    @Param('id') postId: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
+    const currentPage = parseInt(page, 10);
+    const itemsPerPage = parseInt(limit, 10);
+    return this.postService.getComments(postId, currentPage, itemsPerPage);
+  }
+
+  @Put('comments/:commentId')
+  @UseGuards(JwtAuthGuard)
+  async updateComment(
+    @Param('commentId') commentId: string,
+    @Body() updateData: { content: string },
+    @Req() req: Request & { user: UserPayload },
+  ) {
+    const user = req.user;
+    return this.postService.updateComment(
+      commentId,
+      user.user_id,
+      updateData.content,
+    );
+  }
+
+  @Delete('comments/:commentId')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteComment(
+    @Param('commentId') commentId: string,
+    @Req() req: Request & { user: UserPayload },
+  ) {
+    const user = req.user;
+    return this.postService.deleteComment(commentId, user.user_id);
   }
 }

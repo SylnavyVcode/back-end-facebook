@@ -90,6 +90,7 @@ model Comment {
   post      Post   @relation(fields: [post_id], references: [id])
   author_id String
   author    User   @relation(fields: [author_id], references: [id])
+  createdAt DateTime @default(now())
 }
 
 // Commentaire utilisateurs
