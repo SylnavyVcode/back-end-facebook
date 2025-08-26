@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { CreatePostDto } from './dto/CreatePostDto';
 import { UpdatePostDto } from './dto/UpdatePostDto';
@@ -7,11 +7,11 @@ import { UpdatePostDto } from './dto/UpdatePostDto';
 export class PostService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // creation d'un post
+  // === GESTION DES POSTS ===
+
   async postPublification(data: CreatePostDto) {
     console.log('>>>>>POST DATA>>>>>>', data);
 
-    // Créer le post principal
     const post = await this.prisma.post.create({
       data: {
         content: data?.content ? data?.content : null,
@@ -20,7 +20,6 @@ export class PostService {
       },
     });
 
-    // Créer les images si présentes
     if (data.image && Array.isArray(data.image) && data.image.length > 0) {
       await this.prisma.image.createMany({
         data: data.image.map((url) => ({
@@ -30,7 +29,6 @@ export class PostService {
       });
     }
 
-    // Créer les vidéos si présentes
     if (data.video && Array.isArray(data.video) && data.video.length > 0) {
       await this.prisma.video.createMany({
         data: data.video.map((url) => ({
@@ -40,33 +38,76 @@ export class PostService {
       });
     }
 
-    // Retourner le post complet avec ses relations
     const completePost = await this.prisma.post.findUnique({
       where: { id: post.id },
       include: {
         author: true,
         image: true,
         video: true,
-        comments: true,
-        likes: true,
+        comments: {
+          include: {
+            author: {
+              select: {
+                firstname: true,
+                lastname: true,
+                profilePic: true,
+              },
+            },
+          },
+        },
+        likes: {
+          include: {
+            user: {
+              select: {
+                firstname: true,
+                lastname: true,
+                profilePic: true,
+              },
+            },
+          },
+        },
       },
     });
 
     return completePost;
   }
 
-  // Récupérer un Post par son ID avec images
   async getPublification(id: string) {
-    console.log('Récupération du post ID:', id);
-
     const post = await this.prisma.post.findUnique({
       where: { id: id },
       include: {
         author: true,
-        image: true, // ✅ Inclure les images
-        video: true, // ✅ Inclure les vidéos
-        comments: true,
-        likes: true,
+        image: true,
+        video: true,
+        comments: {
+          include: {
+            author: {
+              select: {
+                firstname: true,
+                lastname: true,
+                profilePic: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+        likes: {
+          include: {
+            user: {
+              select: {
+                firstname: true,
+                lastname: true,
+                profilePic: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
       },
     });
 
@@ -74,7 +115,6 @@ export class PostService {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }
 
-    console.log('Post trouvé avec images:', post);
     return post;
   }
 
@@ -104,18 +144,32 @@ export class PostService {
               },
             },
           },
+          take: 3, // Limiter à 3 commentaires pour la liste
+          orderBy: { createdAt: 'desc' },
         },
-        likes: true,
-        video: true, // ✅ Inclure les vidéos
-        image: true, // ✅ Inclure les images
+        likes: {
+          include: {
+            user: {
+              select: {
+                firstname: true,
+                lastname: true,
+                profilePic: true,
+              },
+            },
+          },
+        },
+        video: true,
+        image: true,
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    console.log('Posts récupérés:', posts.length);
-    console.log('Premier post avec images:', posts[0]?.image);
-
-    // Vérifier s'il reste des données
     const totalPosts = await this.prisma.post.count();
     const hasMore = skip + posts.length < totalPosts;
 
@@ -128,35 +182,76 @@ export class PostService {
     };
   }
 
-  // Mettre à jour un Post
+  // Mise à jour du contenu du post uniquement
   async updatePublification(id: string, data: UpdatePostDto) {
-    console.log('Update data:', data);
-    
-    // const resp_post = await this.prisma.post.update({
-    //   where: { id },
-    //   data: {
-    //     content: data?.content,
-    //     likes: data?.likes,
-    //     comments: data?.comments,
-    //     video: data?.videos,
-    //     image: data?.images,
-    //   },
-    //   include: {
-    //     author: true,
-    //     image: true,
-    //     video: true,
-    //     likes: true,
-    //     comments: true,
-    //   },
-    // });
+    const existingPost = await this.prisma.post.findUnique({
+      where: { id },
+      include: {
+        image: true,
+        video: true,
+      },
+    });
 
-    // if (!resp_post) {
-    //   throw new NotFoundException(`Post with ID ${id} not found`);
-    // }
-    // return resp_post;
+    if (!existingPost) {
+      throw new NotFoundException(`Post with ID ${id} not found`);
+    }
+
+    const updatedPost = await this.prisma.$transaction(async (prisma) => {
+      // Mettre à jour le contenu
+      const post = await prisma.post.update({
+        where: { id },
+        data: {
+          content: data?.content !== undefined ? data.content : existingPost.content,
+        },
+      });
+
+      // Gérer les images
+      if (data.image !== undefined) {
+        await prisma.image.deleteMany({
+          where: { postId: id },
+        });
+
+        if (Array.isArray(data.image) && data.image.length > 0) {
+          await prisma.image.createMany({
+            data: data.image.map((url: string) => ({
+              url,
+              postId: id,
+            })),
+          });
+        }
+      }
+
+      // Gérer les vidéos
+      if (data.video !== undefined) {
+        await prisma.video.deleteMany({
+          where: { postId: id },
+        });
+
+        if (Array.isArray(data.video) && data.video.length > 0) {
+          await prisma.video.createMany({
+            data: data.video.map((url: string) => ({
+              url,
+              postId: id,
+            })),
+          });
+        }
+      }
+
+      return await prisma.post.findUnique({
+        where: { id },
+        include: {
+          author: true,
+          image: true,
+          video: true,
+          likes: true,
+          comments: true,
+        },
+      });
+    });
+
+    return updatedPost;
   }
 
-  // Supprimer un Post
   async deletePublification(id: string, user_id?: string) {
     const resp_post = await this.prisma.post.findUnique({
       where: { id },
@@ -167,15 +262,190 @@ export class PostService {
     }
 
     if (resp_post?.author_id !== user_id) {
-      throw new Error('Not authorized');
+      throw new ForbiddenException('Not authorized');
     }
 
-    // Plus besoin de supprimer manuellement les images et vidéos
-    // grâce à onDelete: Cascade
     const deletepost = await this.prisma.post.delete({
       where: { id: resp_post?.id },
     });
 
     return deletepost;
+  }
+
+  // === GESTION DES LIKES ===
+
+  async toggleLike(postId: string, userId: string) {
+    // Vérifier si le post existe
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+    });
+
+    if (!post) {
+      throw new NotFoundException(`Post with ID ${postId} not found`);
+    }
+
+    // Vérifier si l'utilisateur a déjà liké
+    const existingLike = await this.prisma.like.findFirst({
+      where: {
+        post_id: postId,
+        user_id: userId,
+      },
+    });
+
+    if (existingLike) {
+      // Supprimer le like (unlike)
+      await this.prisma.like.delete({
+        where: { id: existingLike.id },
+      });
+      return { action: 'unliked', message: 'Like supprimé' };
+    } else {
+      // Ajouter le like
+      await this.prisma.like.create({
+        data: {
+          user_id: userId,
+          post_id: postId,
+        },
+      });
+      return { action: 'liked', message: 'Post liké' };
+    }
+  }
+
+  async getLikes(postId: string) {
+    const likes = await this.prisma.like.findMany({
+      where: { post_id: postId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstname: true,
+            lastname: true,
+            profilePic: true,
+          },
+        },
+      },
+    });
+
+    return {
+      count: likes.length,
+      likes: likes,
+    };
+  }
+
+  // === GESTION DES COMMENTAIRES ===
+
+  async addComment(postId: string, userId: string, content: string, image?: string, video?: string) {
+    // Vérifier si le post existe
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+    });
+
+    if (!post) {
+      throw new NotFoundException(`Post with ID ${postId} not found`);
+    }
+
+    const comment = await this.prisma.comment.create({
+      data: {
+        content,
+        image: image || '',
+        video: video || '',
+        post_id: postId,
+        author_id: userId,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            firstname: true,
+            lastname: true,
+            profilePic: true,
+          },
+        },
+      },
+    });
+
+    return comment;
+  }
+
+  async updateComment(commentId: string, userId: string, content: string) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+
+    if (!comment) {
+      throw new NotFoundException(`Comment with ID ${commentId} not found`);
+    }
+
+    if (comment.author_id !== userId) {
+      throw new ForbiddenException('Not authorized to update this comment');
+    }
+
+    const updatedComment = await this.prisma.comment.update({
+      where: { id: commentId },
+      data: { content },
+      include: {
+        author: {
+          select: {
+            id: true,
+            firstname: true,
+            lastname: true,
+            profilePic: true,
+          },
+        },
+      },
+    });
+
+    return updatedComment;
+  }
+
+  async deleteComment(commentId: string, userId: string) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+
+    if (!comment) {
+      throw new NotFoundException(`Comment with ID ${commentId} not found`);
+    }
+
+    if (comment.author_id !== userId) {
+      throw new ForbiddenException('Not authorized to delete this comment');
+    }
+
+    await this.prisma.comment.delete({
+      where: { id: commentId },
+    });
+
+    return { message: 'Comment deleted successfully' };
+  }
+
+  async getComments(postId: string, page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+
+    const comments = await this.prisma.comment.findMany({
+      where: { post_id: postId },
+      skip,
+      take: limit,
+      include: {
+        author: {
+          select: {
+            id: true,
+            firstname: true,
+            lastname: true,
+            profilePic: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const totalComments = await this.prisma.comment.count({
+      where: { post_id: postId },
+    });
+
+    return {
+      data: comments,
+      hasMore: skip + comments.length < totalComments,
+      currentPage: page,
+      total: totalComments,
+    };
   }
 }
